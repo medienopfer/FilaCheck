@@ -46,6 +46,7 @@ $args = array_slice($argv, 1);
 $path = null;
 $verbose = false;
 $fix = false;
+$dryRun = false;
 $backup = false;
 $showHelp = false;
 $showVersion = false;
@@ -59,6 +60,8 @@ foreach ($args as $arg) {
         $verbose = true;
     } elseif ($arg === '--fix') {
         $fix = true;
+    } elseif ($arg === '--dry-run') {
+        $dryRun = true;
     } elseif ($arg === '--backup') {
         $backup = true;
     } elseif (! str_starts_with($arg, '-')) {
@@ -85,6 +88,7 @@ if ($showHelp) {
     $output->writeln('<fg=yellow>Options:</>');
     $output->writeln('  -d, --detailed        Show detailed output with rule categories');
     $output->writeln('  --fix                 Automatically fix issues where possible');
+    $output->writeln('  --dry-run             Preview fix changes without modifying files');
     $output->writeln('  --backup              Create backup files when fixing (requires --fix)');
     $output->writeln('  -h, --help            Display this help message');
     $output->writeln('  -V, --version         Display version');
@@ -95,8 +99,14 @@ if ($showHelp) {
     $output->writeln('  filacheck app/Filament/Resources/UserResource.php    Scan specific file');
     $output->writeln('  filacheck --detailed                Show detailed report');
     $output->writeln('  filacheck --fix                     Auto-fix issues');
+    $output->writeln('  filacheck --dry-run                 Preview fixes without writing files');
+    $output->writeln('  filacheck --fix --dry-run           Preview fixes without writing files');
     $output->writeln('  filacheck --fix --backup            Auto-fix with backups');
     exit(0);
+}
+
+if ($dryRun) {
+    $fix = true;
 }
 
 // Default path
@@ -168,7 +178,7 @@ $reporter = new StandaloneReporter($output, $verbose);
 
 if ($fix && count($violations) > 0) {
     $fixer = new CodeFixer();
-    $fixResults = $fixer->fix($violations, $backup);
+    $fixResults = $fixer->fix($violations, $backup, $dryRun);
 
     $reporter->reportWithFixes($scanner->getRules(), $violations, $fixResults);
 
