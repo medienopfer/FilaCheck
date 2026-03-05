@@ -7,6 +7,7 @@ use Filacheck\Fixer\CodeFixer;
 use Filacheck\Reporting\StandaloneReporter;
 use Filacheck\FilacheckServiceProvider;
 use Filacheck\Rules\BladeRule;
+use Filacheck\Rules\ExtraPathRule;
 use Filacheck\Scanner\ResourceScanner;
 use Filacheck\Support\RuleRegistry;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -82,7 +83,7 @@ if ($showHelp) {
     $output->writeln('  filacheck [path] [options]');
     $output->writeln('');
     $output->writeln('<fg=yellow>Arguments:</>');
-    $output->writeln('  path                  Directory to scan (default: app/Filament)');
+    $output->writeln('  path                  Directory or file to scan (default: app/Filament)');
     $output->writeln('');
     $output->writeln('<fg=yellow>Options:</>');
     $output->writeln('  -d, --detailed        Show detailed output with rule categories');
@@ -95,6 +96,7 @@ if ($showHelp) {
     $output->writeln('<fg=yellow>Examples:</>');
     $output->writeln('  filacheck                           Scan app/Filament directory');
     $output->writeln('  filacheck app/Filament/Resources    Scan specific directory');
+    $output->writeln('  filacheck app/Filament/Resources/UserResource.php    Scan specific file');
     $output->writeln('  filacheck --detailed                Show detailed report');
     $output->writeln('  filacheck --fix                     Auto-fix issues');
     $output->writeln('  filacheck --dry-run                 Preview fixes without writing files');
@@ -117,8 +119,8 @@ if (! isAbsolutePath($path)) {
     $path = getcwd().DIRECTORY_SEPARATOR.$path;
 }
 
-if (! is_dir($path)) {
-    $output->writeln("<fg=red>Error:</> Directory not found: {$path}");
+if (! is_dir($path) && ! is_file($path)) {
+    $output->writeln("<fg=red>Error:</> Path not found: {$path}");
     exit(1);
 }
 
@@ -142,6 +144,27 @@ foreach ($registry->all() as $rule) {
 }
 
 $violations = $scanner->scan($path, getcwd());
+
+// Extra paths from rules (e.g., app/Models for enum rules)
+$extraPathRules = array_filter($scanner->getRules(), fn ($rule) => $rule instanceof ExtraPathRule);
+
+if (! empty($extraPathRules)) {
+    $extraPaths = [];
+    foreach ($extraPathRules as $rule) {
+        foreach ($rule->extraScanPaths() as $extraPath) {
+            $extraPaths[$extraPath] = true;
+        }
+    }
+
+    foreach (array_keys($extraPaths) as $extraPath) {
+        $fullPath = getcwd().DIRECTORY_SEPARATOR.$extraPath;
+        // Skip if already covered by the main scan path
+        if (is_dir($fullPath) && ! str_starts_with($fullPath, $path) && ! str_starts_with($path, $fullPath)) {
+            $extraViolations = $scanner->scan($fullPath, getcwd());
+            $violations = array_merge($violations, $extraViolations);
+        }
+    }
+}
 
 $hasBladeRules = array_filter($scanner->getRules(), fn ($rule) => $rule instanceof BladeRule);
 

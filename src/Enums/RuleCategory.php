@@ -8,6 +8,7 @@ enum RuleCategory: string
     case Performance = 'performance';
     case BestPractices = 'best-practices';
     case Security = 'security';
+    case UxSuggestions = 'ux-suggestions';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum RuleCategory: string
             self::Performance => 'Performance',
             self::BestPractices => 'Best Practices',
             self::Security => 'Security',
+            self::UxSuggestions => 'UX Suggestions',
         };
     }
 
@@ -26,6 +28,7 @@ enum RuleCategory: string
             self::Performance => 'Rules that help identify potential performance issues',
             self::BestPractices => 'Recommendations for cleaner and more maintainable code',
             self::Security => 'Rules that help identify potential security issues',
+            self::UxSuggestions => 'Suggestions to improve user experience',
         };
     }
 }
