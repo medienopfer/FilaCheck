@@ -9,6 +9,7 @@ use Filacheck\Rules\DeprecatedEmptyLabelRule;
 use Filacheck\Rules\DeprecatedFilterFormRule;
 use Filacheck\Rules\DeprecatedFormsGetRule;
 use Filacheck\Rules\DeprecatedFormsSetRule;
+use Filacheck\Rules\DeprecatedGetTableQueryRule;
 use Filacheck\Rules\DeprecatedImageColumnSizeRule;
 use Filacheck\Rules\DeprecatedMutateFormDataUsingRule;
 use Filacheck\Rules\DeprecatedPlaceholderRule;
@@ -49,6 +50,7 @@ class FilacheckServiceProvider extends ServiceProvider
             DeprecatedBulkActionsRule::class,
             WrongTabNamespaceRule::class,
             DeprecatedUrlParametersRule::class,
+            DeprecatedGetTableQueryRule::class,
         ];
     }
 }
