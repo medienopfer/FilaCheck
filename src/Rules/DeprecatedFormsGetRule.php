@@ -5,6 +5,7 @@ namespace Filacheck\Rules;
 use Filacheck\Enums\RuleCategory;
 use Filacheck\Rules\Concerns\AddsImport;
 use Filacheck\Rules\Concerns\CalculatesLineNumbers;
+use Filacheck\Rules\Concerns\ResolvesFilamentDocsUrl;
 use Filacheck\Support\Context;
 use Filacheck\Support\Violation;
 use PhpParser\Node;
@@ -16,6 +17,7 @@ class DeprecatedFormsGetRule implements FixableRule
 {
     use AddsImport;
     use CalculatesLineNumbers;
+    use ResolvesFilamentDocsUrl;
 
     public function name(): string
     {
@@ -54,7 +56,7 @@ class DeprecatedFormsGetRule implements FixableRule
                     message: 'The `Filament\Forms\Get` class namespace is deprecated.',
                     file: $context->file,
                     line: $this->getLineFromPosition($context->code, $startPos),
-                    suggestion: 'Use `Filament\Schemas\Components\Utilities\Get` instead of `Filament\Forms\Get`.',
+                    suggestion: 'Use `Filament\Schemas\Components\Utilities\Get` instead of `Filament\Forms\Get`. See: ' . $this->filamentDocsUrl('forms/overview#injecting-the-state-of-another-field'),
                     isFixable: true,
                     startPos: $startPos,
                     endPos: $endPos,
@@ -85,7 +87,7 @@ class DeprecatedFormsGetRule implements FixableRule
                     message: 'Parameter `$get` should be typed as `Get` instead of `callable`.',
                     file: $context->file,
                     line: $this->getLineFromPosition($context->code, $startPos),
-                    suggestion: 'Use `Filament\Schemas\Components\Utilities\Get $get` instead of `callable $get`.',
+                    suggestion: 'Use `Filament\Schemas\Components\Utilities\Get $get` instead of `callable $get`. See: ' . $this->filamentDocsUrl('forms/overview#injecting-the-state-of-another-field'),
                     isFixable: true,
                     startPos: $startPos,
                     endPos: $endPos,

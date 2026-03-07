@@ -5,6 +5,7 @@ namespace Filacheck\Rules;
 use Filacheck\Enums\RuleCategory;
 use Filacheck\Rules\Concerns\AddsImport;
 use Filacheck\Rules\Concerns\CalculatesLineNumbers;
+use Filacheck\Rules\Concerns\ResolvesFilamentDocsUrl;
 use Filacheck\Support\Context;
 use Filacheck\Support\Violation;
 use PhpParser\Node;
@@ -17,6 +18,7 @@ class WrongTabNamespaceRule implements FixableRule
 {
     use AddsImport;
     use CalculatesLineNumbers;
+    use ResolvesFilamentDocsUrl;
 
     private const CORRECT_NAMESPACE = 'Filament\Schemas\Components\Tabs\Tab';
 
@@ -75,7 +77,7 @@ class WrongTabNamespaceRule implements FixableRule
                     message: "Wrong namespace `{$name}`. The correct namespace is `" . self::CORRECT_NAMESPACE . '`.',
                     file: $context->file,
                     line: $this->getLineFromPosition($context->code, $startPos),
-                    suggestion: 'Use `' . self::CORRECT_NAMESPACE . "` instead of `{$name}`.",
+                    suggestion: 'Use `' . self::CORRECT_NAMESPACE . "` instead of `{$name}`. See: " . $this->filamentDocsUrl('schemas/tabs'),
                     isFixable: true,
                     startPos: $startPos,
                     endPos: $endPos,
@@ -104,7 +106,7 @@ class WrongTabNamespaceRule implements FixableRule
                 message: 'v3-style `Tabs\Tab::make()` usage detected. Use `Tab::make()` with the correct import instead.',
                 file: $context->file,
                 line: $this->getLineFromPosition($context->code, $startPos),
-                suggestion: 'Replace `Tabs\Tab::make()` with `Tab::make()` and add `use Filament\Schemas\Components\Tabs\Tab;`.',
+                suggestion: 'Replace `Tabs\Tab::make()` with `Tab::make()` and add `use Filament\Schemas\Components\Tabs\Tab;`. See: ' . $this->filamentDocsUrl('schemas/tabs'),
                 isFixable: true,
                 startPos: $startPos,
                 endPos: $endPos,

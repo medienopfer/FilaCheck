@@ -5,6 +5,7 @@ namespace Filacheck\Rules;
 use Filacheck\Enums\RuleCategory;
 use Filacheck\Rules\Concerns\AddsImport;
 use Filacheck\Rules\Concerns\CalculatesLineNumbers;
+use Filacheck\Rules\Concerns\ResolvesFilamentDocsUrl;
 use Filacheck\Support\Context;
 use Filacheck\Support\Violation;
 use PhpParser\Node;
@@ -19,6 +20,7 @@ class ActionInBulkActionGroupRule implements FixableRule
 {
     use AddsImport;
     use CalculatesLineNumbers;
+    use ResolvesFilamentDocsUrl;
 
     public function name(): string
     {
@@ -136,7 +138,7 @@ class ActionInBulkActionGroupRule implements FixableRule
             message: '`Action::make()` is used inside `toolbarActions()`. Use `BulkAction::make()` instead.',
             file: $context->file,
             line: $this->getLineFromPosition($context->code, $startPos),
-            suggestion: 'Replace `Action::make()` with `BulkAction::make()`.',
+            suggestion: 'Replace `Action::make()` with `BulkAction::make()`. See: ' . $this->filamentDocsUrl('tables/actions#bulk-actions'),
             isFixable: true,
             startPos: $startPos,
             endPos: $endPos,

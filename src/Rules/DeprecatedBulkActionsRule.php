@@ -4,6 +4,7 @@ namespace Filacheck\Rules;
 
 use Filacheck\Enums\RuleCategory;
 use Filacheck\Rules\Concerns\CalculatesLineNumbers;
+use Filacheck\Rules\Concerns\ResolvesFilamentDocsUrl;
 use Filacheck\Support\Context;
 use Filacheck\Support\Violation;
 use PhpParser\Node;
@@ -16,6 +17,7 @@ use PhpParser\NodeFinder;
 class DeprecatedBulkActionsRule implements FixableRule
 {
     use CalculatesLineNumbers;
+    use ResolvesFilamentDocsUrl;
 
     public function name(): string
     {
@@ -56,7 +58,7 @@ class DeprecatedBulkActionsRule implements FixableRule
                 message: 'The `bulkActions()` method is deprecated.',
                 file: $context->file,
                 line: $this->getLineFromPosition($context->code, $startPos),
-                suggestion: 'Use `toolbarActions()` instead of `bulkActions()`.',
+                suggestion: 'Use `toolbarActions()` instead of `bulkActions()`. See: ' . $this->filamentDocsUrl('tables/actions#record-actions'),
                 isFixable: true,
                 startPos: $startPos,
                 endPos: $endPos,

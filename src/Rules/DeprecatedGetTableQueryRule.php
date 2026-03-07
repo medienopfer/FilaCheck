@@ -5,6 +5,7 @@ namespace Filacheck\Rules;
 use Filacheck\Enums\RuleCategory;
 use Filacheck\Rules\Concerns\AddsImport;
 use Filacheck\Rules\Concerns\CalculatesLineNumbers;
+use Filacheck\Rules\Concerns\ResolvesFilamentDocsUrl;
 use Filacheck\Support\Context;
 use Filacheck\Support\Violation;
 use PhpParser\Node;
@@ -20,6 +21,7 @@ class DeprecatedGetTableQueryRule implements FixableRule
 {
     use AddsImport;
     use CalculatesLineNumbers;
+    use ResolvesFilamentDocsUrl;
 
     public function name(): string
     {
@@ -54,7 +56,7 @@ class DeprecatedGetTableQueryRule implements FixableRule
                     message: 'The `getTableQuery()` method is deprecated.',
                     file: $context->file,
                     line: $line,
-                    suggestion: 'Move the query to `->query()` inside the `table(Table $table)` method.',
+                    suggestion: 'Move the query to `->query()` inside the `table(Table $table)` method. See: ' . $this->filamentDocsUrl('components/table'),
                 ),
             ];
         }
@@ -66,7 +68,7 @@ class DeprecatedGetTableQueryRule implements FixableRule
                     message: 'The `getTableQuery()` method is deprecated.',
                     file: $context->file,
                     line: $line,
-                    suggestion: 'Remove `getTableQuery()` — the `table()` method already has a `->query()` call.',
+                    suggestion: 'Remove `getTableQuery()` — the `table()` method already has a `->query()` call. See: ' . $this->filamentDocsUrl('components/table'),
                 ),
             ];
         }
@@ -80,7 +82,7 @@ class DeprecatedGetTableQueryRule implements FixableRule
                     message: 'The `getTableQuery()` method is deprecated.',
                     file: $context->file,
                     line: $line,
-                    suggestion: 'Move the query logic to `->query()` inside the `table(Table $table)` method.',
+                    suggestion: 'Move the query logic to `->query()` inside the `table(Table $table)` method. See: ' . $this->filamentDocsUrl(''),
                 ),
             ];
         }
@@ -94,7 +96,7 @@ class DeprecatedGetTableQueryRule implements FixableRule
                     message: 'The `getTableQuery()` method is deprecated.',
                     file: $context->file,
                     line: $line,
-                    suggestion: 'Move the query to `->query()` inside the `table(Table $table)` method.',
+                    suggestion: 'Move the query to `->query()` inside the `table(Table $table)` method. See: ' . $this->filamentDocsUrl('components/table'),
                 ),
             ];
         }
@@ -116,7 +118,7 @@ class DeprecatedGetTableQueryRule implements FixableRule
             message: 'The `getTableQuery()` method is deprecated.',
             file: $context->file,
             line: $line,
-            suggestion: 'Move the query to `->query()` inside the `table(Table $table)` method.',
+            suggestion: 'Move the query to `->query()` inside the `table(Table $table)` method. See: ' . $this->filamentDocsUrl('components/table'),
             isFixable: true,
             startPos: $insertPos,
             endPos: $insertPos,
@@ -136,7 +138,7 @@ class DeprecatedGetTableQueryRule implements FixableRule
             message: 'Removing deprecated `getTableQuery()` method.',
             file: $context->file,
             line: $line,
-            suggestion: 'This method has been migrated to `->query()` in the `table()` method.',
+            suggestion: 'This method has been migrated to `->query()` in the `table()` method. See: ' . $this->filamentDocsUrl('components/table'),
             isFixable: true,
             startPos: $deleteStart,
             endPos: $deleteEnd,

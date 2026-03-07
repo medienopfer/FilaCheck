@@ -4,6 +4,7 @@ namespace Filacheck\Rules;
 
 use Filacheck\Enums\RuleCategory;
 use Filacheck\Rules\Concerns\CalculatesLineNumbers;
+use Filacheck\Rules\Concerns\ResolvesFilamentDocsUrl;
 use Filacheck\Support\Context;
 use Filacheck\Support\Violation;
 use PhpParser\Node;
@@ -16,6 +17,7 @@ use PhpParser\Node\Name;
 class DeprecatedFilterFormRule implements FixableRule
 {
     use CalculatesLineNumbers;
+    use ResolvesFilamentDocsUrl;
     private const FILTER_CLASSES = [
         'Filter',
         'SelectFilter',
@@ -61,7 +63,7 @@ class DeprecatedFilterFormRule implements FixableRule
                 message: 'The `form()` method on filters is deprecated in Filament 4.',
                 file: $context->file,
                 line: $this->getLineFromPosition($context->code, $startPos),
-                suggestion: 'Use `schema()` instead of `form()`.',
+                suggestion: 'Use `schema()` instead of `form()`. See: ' . $this->filamentDocsUrl('tables/filters/custom'),
                 isFixable: true,
                 startPos: $startPos,
                 endPos: $endPos,

@@ -5,6 +5,7 @@ namespace Filacheck\Rules;
 use Filacheck\Enums\RuleCategory;
 use Filacheck\Rules\Concerns\AddsImport;
 use Filacheck\Rules\Concerns\CalculatesLineNumbers;
+use Filacheck\Rules\Concerns\ResolvesFilamentDocsUrl;
 use Filacheck\Support\Context;
 use Filacheck\Support\Violation;
 use PhpParser\Node;
@@ -16,6 +17,7 @@ class DeprecatedFormsSetRule implements FixableRule
 {
     use AddsImport;
     use CalculatesLineNumbers;
+    use ResolvesFilamentDocsUrl;
 
     public function name(): string
     {
@@ -54,7 +56,7 @@ class DeprecatedFormsSetRule implements FixableRule
                     message: 'The `Filament\Forms\Set` class namespace is deprecated.',
                     file: $context->file,
                     line: $this->getLineFromPosition($context->code, $startPos),
-                    suggestion: 'Use `Filament\Schemas\Components\Utilities\Set` instead of `Filament\Forms\Set`.',
+                    suggestion: 'Use `Filament\Schemas\Components\Utilities\Set` instead of `Filament\Forms\Set`. See: ' . $this->filamentDocsUrl('forms/overview#setting-the-state-of-another-field'),
                     isFixable: true,
                     startPos: $startPos,
                     endPos: $endPos,
@@ -85,7 +87,7 @@ class DeprecatedFormsSetRule implements FixableRule
                     message: 'Parameter `$set` should be typed as `Set` instead of `callable`.',
                     file: $context->file,
                     line: $this->getLineFromPosition($context->code, $startPos),
-                    suggestion: 'Use `Filament\Schemas\Components\Utilities\Set $set` instead of `callable $set`.',
+                    suggestion: 'Use `Filament\Schemas\Components\Utilities\Set $set` instead of `callable $set`. See: ' . $this->filamentDocsUrl('forms/overview#setting-the-state-of-another-field'),
                     isFixable: true,
                     startPos: $startPos,
                     endPos: $endPos,
