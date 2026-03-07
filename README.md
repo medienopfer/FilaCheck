@@ -111,14 +111,16 @@ This makes FilaCheck perfect for CI pipelines.
 
 ## [FilaCheck Pro](https://filamentexamples.com/filacheck)
 
-**FilaCheck Pro** adds 16 additional rules for performance optimization, security, best practices, and UX suggestions.
+**FilaCheck Pro** adds 19 additional rules for performance optimization, security, best practices, and UX suggestions.
 
-### Performance Rules (2 rules)
+### Performance Rules (4 rules)
 
 | Rule | Description | Fixable |
 |------|-------------|---------|
 | `too-many-columns` | Warns when tables have more than 10 columns | No |
 | `large-option-list-searchable` | Suggests `->searchable()` for lists with 10+ options | No |
+| `heavy-closure-in-format-state` | Detects database queries inside `formatStateUsing()` closures that cause N+1 issues | No |
+| `stats-widget-polling-not-disabled` | Warns when `StatsOverviewWidget` uses the default 5-second polling interval | Yes |
 
 ### Security Rules (2 rules)
 
@@ -140,7 +142,7 @@ This makes FilaCheck perfect for CI pipelines.
 | `bulk-action-missing-deselect` | Warns when `BulkAction` is missing `deselectRecordsAfterCompletion()` | Yes |
 | `enum-missing-filament-interfaces` | Warns when enums cast in Eloquent models are missing Filament interfaces like `HasLabel` | No |
 
-### UX Suggestions Rules (4 rules)
+### UX Suggestions Rules (5 rules)
 
 | Rule | Description | Fixable |
 |------|-------------|---------|
@@ -148,6 +150,7 @@ This makes FilaCheck perfect for CI pipelines.
 | `relationship-select-not-searchable` | Warns when `Select` with `relationship()` is missing `searchable()` | No |
 | `missing-table-filters` | Warns when table has filterable columns (boolean, badge, icon) but no filters defined | No |
 | `table-without-searchable-columns` | Warns when table has text columns but none are searchable | No |
+| `filter-missing-indicator` | Warns when custom `Filter` has a `schema()` but no `indicateUsing()` or `indicator()` for active filter badges | No |
 
 Get FilaCheck Pro at [filamentexamples.com/filacheck](https://filamentexamples.com/filacheck).
 
