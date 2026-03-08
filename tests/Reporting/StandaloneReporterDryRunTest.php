@@ -266,6 +266,69 @@ it('shows a single diff block with multiple line changes', function () {
     });
 });
 
+it('shows all lines for a multiline replacement preview', function () {
+    withTempDir(function (string $tempDir) {
+        $file = $tempDir . '/MultilineReplacement.php';
+        file_put_contents($file, implode("\n", [
+            '<?php',
+            '',
+            '$component',
+            '    ->assertFormFieldHidden(',
+            "        'hidden_title'",
+            '    );',
+            '',
+        ]));
+
+        $rule = createRule('dry-run-multiline-replacement');
+        $violations = [
+            new Violation(
+                level: 'warning',
+                message: 'The `assertFormFieldHidden()` method is deprecated.',
+                file: $file,
+                line: 4,
+                suggestion: 'Use `assertSchemaComponentHidden(..., \'form\')` instead.',
+                rule: $rule->name(),
+                isFixable: true,
+                startPos: 0,
+                endPos: 0,
+                replacement: 'unused',
+            ),
+        ];
+
+        $output = renderDryRunOutput(
+            rules: [$rule],
+            violations: $violations,
+            previews: [
+                $file => [
+                    [
+                        'line' => 4,
+                        'column' => 5,
+                        'from' => implode("\n", [
+                            '->assertFormFieldHidden(',
+                            "    'hidden_title'",
+                            ');',
+                        ]),
+                        'to' => implode("\n", [
+                            '->assertSchemaComponentHidden(',
+                            "    'hidden_title',",
+                            "    'form',",
+                            ');',
+                        ]),
+                    ],
+                ],
+            ],
+            byFile: [$file => ['fixed' => 1, 'skipped' => 0]],
+        );
+
+        expect($output)->toContain('@@ line 4 @@')
+            ->and($output)->toContain('- ->assertFormFieldHidden(')
+            ->and($output)->toContain("-     'hidden_title'")
+            ->and($output)->toContain('+ ->assertSchemaComponentHidden(')
+            ->and($output)->toContain("+     'hidden_title',")
+            ->and($output)->toContain("+     'form',");
+    });
+});
+
 it('sorts multiple diffs by line number', function () {
     withTempDir(function (string $tempDir) {
         $file = $tempDir . '/SortedDiffs.php';
