@@ -1,6 +1,7 @@
 <?php
 
 use Filacheck\FilacheckServiceProvider;
+use Filacheck\Rules\DeprecatedActionFormRule;
 use Filacheck\Rules\DeprecatedReactiveRule;
 use Filacheck\Support\RuleRegistry;
 
@@ -18,7 +19,7 @@ it('registers multiple rules', function () {
 
     $registry->register([
         DeprecatedReactiveRule::class,
-        \Filacheck\Rules\DeprecatedActionFormRule::class,
+        DeprecatedActionFormRule::class,
     ]);
 
     expect($registry->count())->toBe(2);
@@ -58,12 +59,9 @@ it('registers all rules from FilacheckServiceProvider', function () {
     expect($rules)
         ->toBeArray()
         ->toEqual([
-            DeprecatedReactiveRule::class,
+            \Filacheck\Rules\DeprecatedReactiveRule::class,
             \Filacheck\Rules\DeprecatedActionFormRule::class,
-            \Filacheck\Rules\DeprecatedActionAssertsRule::class,
-            \Filacheck\Rules\DeprecatedTableAssertsRule::class,
-            \Filacheck\Rules\DeprecatedFormAssertsRule::class,
-            \Filacheck\Rules\DeprecatedInfolistAssertsRule::class,
+            \Filacheck\Rules\DeprecatedTestMethodsRule::class,
             \Filacheck\Rules\DeprecatedFilterFormRule::class,
             \Filacheck\Rules\DeprecatedPlaceholderRule::class,
             \Filacheck\Rules\DeprecatedMutateFormDataUsingRule::class,
