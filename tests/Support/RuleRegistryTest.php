@@ -74,5 +74,6 @@ it('registers all rules from FilacheckServiceProvider', function () {
             \Filacheck\Rules\DeprecatedBulkActionsRule::class,
             \Filacheck\Rules\WrongTabNamespaceRule::class,
             \Filacheck\Rules\DeprecatedUrlParametersRule::class,
-        ]);
+            \Filacheck\Rules\DeprecatedGetTableQueryRule::class,
+    ]);
 });

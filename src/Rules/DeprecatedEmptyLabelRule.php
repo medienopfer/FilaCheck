@@ -4,6 +4,7 @@ namespace Filacheck\Rules;
 
 use Filacheck\Enums\RuleCategory;
 use Filacheck\Rules\Concerns\CalculatesLineNumbers;
+use Filacheck\Rules\Concerns\ResolvesFilamentDocsUrl;
 use Filacheck\Support\Context;
 use Filacheck\Support\Violation;
 use PhpParser\Node;
@@ -17,6 +18,7 @@ use PhpParser\Node\Scalar\String_;
 class DeprecatedEmptyLabelRule implements FixableRule
 {
     use CalculatesLineNumbers;
+    use ResolvesFilamentDocsUrl;
     public function name(): string
     {
         return 'deprecated-empty-label';
@@ -74,7 +76,7 @@ class DeprecatedEmptyLabelRule implements FixableRule
                     message: 'Using `label(\'\')` to hide labels is deprecated.',
                     file: $context->file,
                     line: $this->getLineFromPosition($context->code, $startPos),
-                    suggestion: 'Use `iconButton()` instead of `label(\'\')` for Actions.',
+                    suggestion: 'Use `iconButton()` instead of `label(\'\')` for Actions. See: ' . $this->filamentDocsUrl('actions/overview#choosing-a-trigger-style'),
                     isFixable: true,
                     startPos: $startPos,
                     endPos: $endPos,
@@ -89,7 +91,7 @@ class DeprecatedEmptyLabelRule implements FixableRule
                 message: 'Using `label(\'\')` to hide labels is deprecated.',
                 file: $context->file,
                 line: $this->getLineFromPosition($context->code, $startPos),
-                suggestion: 'Use `hiddenLabel()` instead of `label(\'\')`.',
+                suggestion: 'Use `hiddenLabel()` instead of `label(\'\')`. See: ' . $this->filamentDocsUrl('forms/overview#hiding-a-field’s-label'),
                 isFixable: true,
                 startPos: $startPos,
                 endPos: $endPos,

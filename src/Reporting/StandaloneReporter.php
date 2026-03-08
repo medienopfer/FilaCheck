@@ -3,12 +3,15 @@
 namespace Filacheck\Reporting;
 
 use Filacheck\Enums\RuleCategory;
+use Filacheck\Reporting\Concerns\HandlesDryRunPreviews;
 use Filacheck\Rules\Rule;
 use Filacheck\Support\Violation;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class StandaloneReporter
 {
+    use HandlesDryRunPreviews;
+
     public function __construct(
         private OutputInterface $output,
         private bool $verbose = false,
@@ -88,6 +91,16 @@ class StandaloneReporter
         }
 
         foreach ($groupedByFile as $file => $fileViolations) {
+            usort($fileViolations, function (Violation $left, Violation $right): int {
+                $lineComparison = $left->line <=> $right->line;
+
+                if ($lineComparison !== 0) {
+                    return $lineComparison;
+                }
+
+                return ($left->startPos ?? 0) <=> ($right->startPos ?? 0);
+            });
+
             $this->output->writeln("  <fg=gray>{$file}</>");
 
             foreach ($fileViolations as $violation) {
@@ -138,17 +151,24 @@ class StandaloneReporter
 
         $rulesSummary = "<fg=green>{$passCount} passed</>, <fg=red>{$failCount} failed</>";
         $this->output->writeln("Rules: {$rulesSummary}");
-        $this->output->writeln('Issues: '.implode(', ', $summary));
+        $this->output->writeln('Issues: ' . implode(', ', $summary));
     }
 
     /**
      * @param  Rule[]  $rules
      * @param  Violation[]  $violations
-     * @param  array{fixed: int, skipped: int, byFile: array<string, array{fixed: int, skipped: int}>}  $fixResults
+     * @param  array{
+     *     fixed: int,
+     *     skipped: int,
+     *     byFile: array<string, array{fixed: int, skipped: int}>,
+     *     dryRun?: bool,
+     *     previews?: array<string, array<int, array{line: int, column: int, from: string, to: string}>>
+     * }  $fixResults
      */
     public function reportWithFixes(array $rules, array $violations, array $fixResults): void
     {
         $violations = array_values(array_filter($violations, fn (Violation $v) => ! $v->silent));
+        $this->initializeDryRunPreviewState($fixResults);
 
         $violationsByRule = [];
         foreach ($violations as $violation) {
@@ -217,10 +237,10 @@ class StandaloneReporter
 
         if ($fixableCount > 0 && $unfixableCount === 0) {
             $icon = '<fg=cyan>✓</>';
-            $status = ' <fg=cyan>(fixed)</>';
+            $status = $this->isDryRun ? ' <fg=cyan>(proposed)</>' : ' <fg=cyan>(fixed)</>';
         } elseif ($fixableCount > 0) {
             $icon = '<fg=yellow>!</>';
-            $status = ' <fg=yellow>(partial fix)</>';
+            $status = $this->isDryRun ? ' <fg=yellow>(partial proposed)</>' : ' <fg=yellow>(partial fix)</>';
         } else {
             $icon = '<fg=red>✗</>';
             $status = ' <fg=red>(not fixable)</>';
@@ -239,7 +259,9 @@ class StandaloneReporter
             foreach ($fileViolations as $violation) {
                 if ($violation->isFixable) {
                     $this->output->writeln(
-                        "    <fg=cyan>Line {$violation->line}:</> {$violation->message} <fg=cyan>(fixed)</>"
+                        $this->isDryRun
+                            ? "    <fg=cyan>Line {$violation->line}:</> {$violation->message} <fg=cyan>(proposed)</>"
+                            : "    <fg=cyan>Line {$violation->line}:</> {$violation->message} <fg=cyan>(fixed)</>"
                     );
                 } else {
                     $levelColor = match ($violation->level) {
@@ -258,6 +280,54 @@ class StandaloneReporter
                         "      <fg=gray>→ {$violation->suggestion}</>"
                     );
                 }
+
+                if ($this->isDryRun && $violation->isFixable) {
+                    $previewChanges = $this->consumePreviewChanges($violation->file, $violation->line);
+
+                    usort($previewChanges, function (array $left, array $right): int {
+                        $lineComparison = $left['line'] <=> $right['line'];
+
+                        if ($lineComparison !== 0) {
+                            return $lineComparison;
+                        }
+
+                        return $left['column'] <=> $right['column'];
+                    });
+
+                    if (count($previewChanges) > 0) {
+                        $this->output->writeln('      <fg=gray>Proposed file changes:</>');
+
+                        foreach ($previewChanges as $change) {
+                            $this->output->writeln("        <fg=gray>@@ line {$change['line']} @@</>");
+
+                            $this->renderDryRunDiffLines($violation->file, $change);
+                        }
+                    }
+                }
+            }
+
+            if ($this->isDryRun) {
+                $remainingPreviewChanges = $this->consumeRemainingPreviewChanges($file);
+
+                usort($remainingPreviewChanges, function (array $left, array $right): int {
+                    $lineComparison = $left['line'] <=> $right['line'];
+
+                    if ($lineComparison !== 0) {
+                        return $lineComparison;
+                    }
+
+                    return $left['column'] <=> $right['column'];
+                });
+
+                if (count($remainingPreviewChanges) > 0) {
+                    $this->output->writeln('      <fg=gray>Additional proposed file changes:</>');
+
+                    foreach ($remainingPreviewChanges as $change) {
+                        $this->output->writeln("        <fg=gray>@@ line {$change['line']} @@</>");
+
+                        $this->renderDryRunDiffLines($file, $change);
+                    }
+                }
             }
         }
 
@@ -265,18 +335,29 @@ class StandaloneReporter
     }
 
     /**
-     * @param  array{fixed: int, skipped: int, byFile: array<string, array{fixed: int, skipped: int}>}  $fixResults
+     * @param  array{
+     *     fixed: int,
+     *     skipped: int,
+     *     byFile: array<string, array{fixed: int, skipped: int}>,
+     *     dryRun?: bool,
+     *     previews?: array<string, array<int, array{line: int, column: int, from: string, to: string}>>
+     * }  $fixResults
      */
     private function reportFixSummary(array $fixResults, int $passCount, int $totalRules): void
     {
         $fixed = $fixResults['fixed'];
         $skipped = $fixResults['skipped'];
         $filesModified = count(array_filter($fixResults['byFile'], fn ($r) => $r['fixed'] > 0));
+        $isDryRun = (bool) ($fixResults['dryRun'] ?? false);
 
         $this->output->writeln('<fg=gray>───────────────────────────────</>');
 
         if ($fixed > 0) {
-            $this->output->writeln("<fg=cyan;options=bold>✓ Fixed {$fixed} issue(s)</> in {$filesModified} file(s)");
+            if ($isDryRun) {
+                $this->output->writeln("<fg=cyan;options=bold>✓ Proposed {$fixed} fix(es)</> in {$filesModified} file(s)");
+            } else {
+                $this->output->writeln("<fg=cyan;options=bold>✓ Fixed {$fixed} issue(s)</> in {$filesModified} file(s)");
+            }
         }
 
         if ($skipped > 0) {
@@ -284,7 +365,11 @@ class StandaloneReporter
         }
 
         if ($fixed > 0 && $skipped === 0) {
-            $this->output->writeln('<fg=green;options=bold>All issues have been fixed!</>');
+            $this->output->writeln(
+                $isDryRun
+                    ? '<fg=green;options=bold>All fixable issues have been proposed!</>'
+                    : '<fg=green;options=bold>All issues have been fixed!</>'
+            );
         }
     }
 
@@ -345,7 +430,7 @@ class StandaloneReporter
             $summary[] = "<fg=yellow>{$warningCount} warning(s)</>";
         }
 
-        $this->output->writeln('Found '.implode(' and ', $summary).'.');
+        $this->output->writeln('Found ' . implode(' and ', $summary) . '.');
     }
 
     /**
