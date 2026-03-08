@@ -13,7 +13,7 @@ use PhpParser\Node\Identifier;
 
 use function is_string;
 
-class DeprecatedTestMethodsRule implements FixableRule
+class DeprecatedTestMethodsRule implements FixableRule, ExtraPathRule
 {
     use AddsImport;
     use CalculatesLineNumbers;
@@ -276,5 +276,10 @@ class DeprecatedTestMethodsRule implements FixableRule
             $openingParenthesisPosition + 1,
             $closingParenthesisPosition - $openingParenthesisPosition - 1,
         );
+    }
+
+    public function extraScanPaths(): array
+    {
+        return ['test', 'tests'];
     }
 }
